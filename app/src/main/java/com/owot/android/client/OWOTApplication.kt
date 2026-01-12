@@ -2,13 +2,21 @@ package com.owot.android.client
 
 import android.app.Application
 import android.content.Context
+import androidx.hilt.work.HiltWorkerFactory
 import androidx.room.Room
+import androidx.work.Configuration
 import com.owot.android.client.data.AppDatabase
 import com.owot.android.client.network.WebSocketManager
+import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import javax.inject.Inject
 
-class OWOTApplication : Application() {
+@HiltAndroidApp
+class OWOTApplication : Application(), Configuration.Provider {
+    
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
     
     // Database for local storage
     val database by lazy {
@@ -23,14 +31,18 @@ class OWOTApplication : Application() {
     val applicationScope = CoroutineScope(SupervisorJob())
     
     // WebSocket manager for network operations
+    @Inject
     lateinit var webSocketManager: WebSocketManager
     
     override fun onCreate() {
         super.onCreate()
         instance = this
-        
-        // Initialize WebSocket manager
-        webSocketManager = WebSocketManager(this)
+    }
+    
+    override fun getWorkManagerConfiguration(): Configuration {
+        return Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
     }
     
     companion object {

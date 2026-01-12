@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true"
+    tools:context=".ui.WorldActivity">
+
+    <!-- OWOT Surface View -->
+    <com.owot.android.client.ui.OWOTSurfaceView
+        android:id="@+id/surface_owot"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/white" />
+
+    <!-- Info Text -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/text_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:background="@color/black_translucent"
+        android:padding="8dp"
+        android:text="Connecting..."
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        app:layout_anchorGravity="top" />
+
+    <!-- Chat Input -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/layout_chat_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="8dp"
+        app:cardCornerRadius="8dp"
+        app:layout_anchorGravity="bottom">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/input_chat"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Type a message..."
+                android:imeOptions="actionSend"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLines="3" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/button_send_chat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="Send"
+                app:icon="@android:drawable/ic_menu_send" />
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Chat Recycler View -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_chat"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="80dp"
+        android:background="@color/chat_background"
+        android:padding="8dp"
+        android:visibility="gone" />
+
+    <!-- Connection Status FAB -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_connection_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/stat_notify_error"
+        android:contentDescription="Connection Status"
+        app:layout_anchorGravity="top|end" />
+
+    <!-- Control FABs -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_zoom_in"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp"
+        android:src="@android:drawable/btn_plus"
+        android:contentDescription="Zoom In"
+        app:fabSize="mini" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_zoom_out"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp"
+        android:layout_marginTop="80dp"
+        android:src="@android:drawable/btn_minus"
+        android:contentDescription="Zoom Out"
+        app:fabSize="mini"
+        app:layout_anchor="@id/fab_zoom_in"
+        app:layout_anchorGravity="top" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="16dp"
+        android:layout_marginTop="144dp"
+        android:src="@android:drawable/ic_menu_help"
+        android:contentDescription="Center View"
+        app:fabSize="mini"
+        app:layout_anchor="@id/fab_zoom_out"
+        app:layout_anchorGravity="top" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -17,18 +17,23 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textview.MaterialTextView
 import com.owot.android.client.R
 import com.owot.android.client.data.models.*
+import com.owot.android.client.network.WebSocketManager
 import com.owot.android.client.ui.adapter.ChatAdapter
 import com.owot.android.client.viewmodel.WorldViewModel
 import com.owot.android.client.viewmodel.WorldViewModelFactory
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Main world activity with canvas rendering and interaction
  */
 @AndroidEntryPoint
 class WorldActivity : AppCompatActivity() {
+    
+    @Inject
+    lateinit var webSocketManager: WebSocketManager
     
     private lateinit var viewModel: WorldViewModel
     private lateinit var chatAdapter: ChatAdapter
@@ -82,7 +87,7 @@ class WorldActivity : AppCompatActivity() {
     }
     
     private fun setupViewModel(worldName: String) {
-        val factory = WorldViewModelFactory(worldName, application)
+        val factory = WorldViewModelFactory(worldName, webSocketManager, application)
         viewModel = ViewModelProvider(this, factory)[WorldViewModel::class.java]
     }
     

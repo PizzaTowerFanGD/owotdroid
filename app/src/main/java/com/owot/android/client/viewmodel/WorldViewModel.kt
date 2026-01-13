@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.owot.android.client.OWOTApplication
 import com.owot.android.client.data.models.*
 import com.owot.android.client.network.WebSocketManager
 import kotlinx.coroutines.*

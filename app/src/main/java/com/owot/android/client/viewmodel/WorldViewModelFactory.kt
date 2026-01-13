@@ -3,7 +3,6 @@ package com.owot.android.client.viewmodel
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.owot.android.client.OWOTApplication
 import com.owot.android.client.network.WebSocketManager
 
 /**

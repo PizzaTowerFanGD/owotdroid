@@ -42,7 +42,6 @@ android {
         correctErrorTypes = true
         useBuildCache = false
         includeCompileClasspath = false
-        useWorkerAPI = false
     }
 
     buildFeatures {

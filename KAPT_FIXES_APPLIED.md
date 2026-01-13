@@ -1,8 +1,13 @@
 # KAPT Duplicate Class Errors - Fix Applied
 
-## Problem Analysis
+## Root Cause
 
-The KAPT duplicate class errors were **NOT** caused by actual duplicate class definitions in the source code. Each class exists only once. The errors were caused by:
+The KAPT duplicate class errors were **NOT** caused by actual duplicate class definitions in the source code. Verification shows each class exists only once:
+- `WorldTheme` - only in CoreModels.kt
+- `WSMessage` and subclasses - only in NetworkModels.kt  
+- `WebSocketManager` - only in WebSocketManager.kt
+
+The errors were caused by:
 
 1. **Circular Dependency in Hilt DI Graph**: 
    - `OWOTApplication` was injecting `WebSocketManager`
@@ -199,3 +204,62 @@ These classes were NOT actually duplicated in source code:
 - `com.owot.android.client.network.WebSocketManager` (only in WebSocketManager.kt)
 
 The "duplicates" were KAPT-generated stub files that were conflicting due to the circular dependency issue.
+
+## Additional Fixes Applied
+
+### 9. Fixed KAPT Configuration in build.gradle
+
+**Removed problematic settings:**
+- `mapDiagnosticLocations = true` - Can cause variant conflicts
+- `generateStubs = true` - Can cause duplicate stub generation across variants
+- `showProcessorStats = false` - Unnecessary
+- `useBuildCache = false` - Changed to `true` for better performance
+
+**Final optimized configuration:**
+```gradle
+kapt {
+    correctErrorTypes = true
+    useBuildCache = true  // Enable caching for faster builds
+    includeCompileClasspath = false  // Prevent classpath pollution
+    
+    javacOptions {
+        option("-Xmaxerrs", 500)
+    }
+    
+    arguments {
+        arg("room.schemaLocation", "$projectDir/schemas")
+        arg("room.incremental", "true")
+        arg("dagger.fastInit", "enabled")
+        arg("dagger.formatGeneratedSource", "disabled")
+    }
+}
+```
+
+### 10. Added Missing KAPT Dependency
+
+**Added to build.gradle:**
+```gradle
+kapt 'androidx.hilt:hilt-compiler:1.1.0'  // Required for Hilt WorkManager
+```
+
+This dependency was missing and is required when using `androidx.hilt:hilt-work`.
+
+### Required KAPT Dependencies (Complete List)
+```gradle
+kapt 'androidx.room:room-compiler:2.6.1'
+kapt 'com.google.dagger:hilt-compiler:2.48'
+kapt 'androidx.hilt:hilt-compiler:1.1.0'  // For Hilt WorkManager integration
+```
+
+## Summary of All Changes
+
+1. ✅ Removed circular dependency in OWOTApplication.kt
+2. ✅ Updated AppModule.kt to use @ApplicationContext
+3. ✅ Modified WorldViewModel.kt to accept WebSocketManager via constructor
+4. ✅ Updated WorldViewModelFactory.kt to pass WebSocketManager
+5. ✅ Modified WorldActivity.kt to inject WebSocketManager
+6. ✅ Added missing import in WebSocketService.kt
+7. ✅ Removed unused imports from OWOTApplication.kt
+8. ✅ Optimized KAPT configuration
+9. ✅ Added missing Hilt compiler dependency
+10. ✅ Verified no actual duplicate class definitions exist

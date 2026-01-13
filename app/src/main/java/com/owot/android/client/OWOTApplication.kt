@@ -5,7 +5,6 @@ import android.content.Context
 import androidx.room.Room
 import androidx.work.Configuration
 import com.owot.android.client.data.AppDatabase
-import com.owot.android.client.network.WebSocketManager
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob

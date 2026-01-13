@@ -40,6 +40,9 @@ android {
 
     kapt {
         correctErrorTypes = true
+        useBuildCache = false
+        includeCompileClasspath = false
+        useWorkerAPI = false
     }
 
     buildFeatures {
@@ -70,6 +73,7 @@ dependencies {
     
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
     
     // WebView for WebSocket support
     implementation 'androidx.webkit:webkit:1.8.0'
@@ -85,6 +89,10 @@ dependencies {
     // Hilt for dependency injection
     implementation 'com.google.dagger:hilt-android:2.48'
     kapt 'com.google.dagger:hilt-compiler:2.48'
+
+    // Hilt WorkManager integration
+    implementation 'androidx.hilt:hilt-work:1.1.0'
+    implementation 'androidx.work:work-runtime-ktx:2.8.1'
     
     // Navigation component
     implementation 'androidx.navigation:navigation-fragment-ktx:2.7.5'

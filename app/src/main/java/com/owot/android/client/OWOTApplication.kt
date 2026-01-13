@@ -2,7 +2,6 @@ package com.owot.android.client
 
 import android.app.Application
 import android.content.Context
-import androidx.hilt.work.HiltWorkerFactory
 import androidx.room.Room
 import androidx.work.Configuration
 import com.owot.android.client.data.AppDatabase
@@ -11,10 +10,11 @@ import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
+import androidx.hilt.work.HiltWorkerFactory
 
 @HiltAndroidApp
 class OWOTApplication : Application(), Configuration.Provider {
-    
+
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
     

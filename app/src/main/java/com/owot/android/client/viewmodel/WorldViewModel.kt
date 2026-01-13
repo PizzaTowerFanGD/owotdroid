@@ -18,10 +18,9 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class WorldViewModel(
     private val worldName: String,
+    private val webSocketManager: WebSocketManager,
     application: Application
 ) : AndroidViewModel(application) {
-    
-    private val application = getApplication<OWOTApplication>()
     
     // Network state
     private val _clientState = MutableLiveData<ClientState>()
@@ -61,9 +60,6 @@ class WorldViewModel(
     
     private val _zoom = MutableStateFlow(1.0f)
     val zoom: StateFlow<Float> = _zoom.asStateFlow()
-    
-    // Network manager
-    private val webSocketManager = application.webSocketManager
     
     // User preferences
     private val userPreferences = MutableLiveData<UserPreferences>()

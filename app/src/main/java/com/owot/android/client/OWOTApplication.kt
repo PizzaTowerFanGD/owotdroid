@@ -30,10 +30,6 @@ class OWOTApplication : Application(), Configuration.Provider {
     // Global coroutine scope
     val applicationScope = CoroutineScope(SupervisorJob())
     
-    // WebSocket manager for network operations
-    @Inject
-    lateinit var webSocketManager: WebSocketManager
-    
     override fun onCreate() {
         super.onCreate()
         instance = this

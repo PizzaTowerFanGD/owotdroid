@@ -114,7 +114,6 @@ class Converters {
  * Tile entity for Room database
  */
 @Entity(tableName = "tiles")
-@TypeConverters(Converters::class)
 data class TileEntity(
     @PrimaryKey
     val tileKey: String, // "tileX,tileY"
@@ -200,7 +199,6 @@ data class TileEntity(
  * Chat message entity for Room database
  */
 @Entity(tableName = "chat_messages")
-@TypeConverters(Converters::class)
 data class ChatMessageEntity(
     @PrimaryKey
     val id: String,
@@ -264,7 +262,6 @@ data class ChatMessageEntity(
  * World properties entity for Room database
  */
 @Entity(tableName = "world_properties")
-@TypeConverters(Converters::class)
 data class WorldPropertiesEntity(
     @PrimaryKey
     val worldName: String,
@@ -334,7 +331,6 @@ data class WorldPropertiesEntity(
  * User preferences entity for Room database
  */
 @Entity(tableName = "user_preferences")
-@TypeConverters(Converters::class)
 data class UserPreferencesEntity(
     @PrimaryKey
     val worldName: String,

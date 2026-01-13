@@ -33,6 +33,7 @@
     <!-- UI colors -->
     <color name="black_translucent">#80000000</color>
     <color name="white_translucent">#80FFFFFF</color>
+    <color name="ic_launcher_background">#FFFFFF</color>
     
     <!-- Material Design colors -->
     <color name="red_500">#FFF44336</color>
@@ -41,5 +42,4 @@
     <color name="green_500">#FF4CAF50</color>
     <color name="blue_500">#FF2196F3</color>
     <color name="indigo_500">#FF3F51B5</color>
-    <color name="purple_500">#FF9C27B0</color>
 </resources>

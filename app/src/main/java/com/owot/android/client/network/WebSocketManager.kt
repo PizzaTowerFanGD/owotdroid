@@ -446,7 +446,7 @@ class WebSocketManager(private val application: OWOTApplication) {
      */
     fun cleanup() {
         disconnect()
-        client?.dns?.cancelAll()
+        client?.dispatcher?.executorService?.shutdown()
         networkScope.cancel()
         supervisorJob.cancel()
     }

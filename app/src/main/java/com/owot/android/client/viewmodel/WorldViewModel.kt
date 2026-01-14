@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * ViewModel for the world activity handling all world interaction
  */
 class WorldViewModel(
-    private val worldName: String,
+    val worldName: String, // Make it a public val in the constructor
     private val webSocketManager: WebSocketManager,
     application: Application
 ) : AndroidViewModel(application) {
@@ -645,11 +645,6 @@ class WorldViewModel(
     fun clearAnnouncement() {
         _announcements.value = null
     }
-    
-    /**
-     * Get world name
-     */
-    val worldName: String get() = worldName
     
     override fun onCleared() {
         super.onCleared()

@@ -1,5 +1,6 @@
 package com.owot.android.client.network
 
+import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
@@ -23,7 +24,7 @@ import java.io.IOException
 /**
  * Manages WebSocket connections and message handling for OWOT client
  */
-class WebSocketManager(private val application: OWOTApplication) {
+class WebSocketManager(private val context: Context) {
     
     companion object {
         private const val TAG = "WebSocketManager"

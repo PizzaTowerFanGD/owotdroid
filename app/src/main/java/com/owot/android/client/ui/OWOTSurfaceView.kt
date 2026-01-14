@@ -13,6 +13,8 @@ import com.owot.android.client.data.models.*
 import com.owot.android.client.rendering.OWOTRenderer
 import com.owot.android.client.viewmodel.WorldViewModel
 import kotlinx.coroutines.*
+import java.util.Timer
+import java.util.TimerTask
 import kotlin.math.*
 
 /**

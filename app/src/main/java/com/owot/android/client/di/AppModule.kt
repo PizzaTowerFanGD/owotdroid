@@ -43,7 +43,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideWebSocketManager(@ApplicationContext context: Context): WebSocketManager {
-        return WebSocketManager(context.applicationContext as OWOTApplication)
+        return WebSocketManager(context)
     }
     
     @Provides

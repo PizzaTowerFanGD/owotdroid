@@ -2,7 +2,6 @@ package com.owot.android.client.manager
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.preference.PreferenceManager
 import com.owot.android.client.data.models.UserPreferences
 import com.owot.android.client.util.OWOTUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -14,7 +13,7 @@ import javax.inject.Inject
 class PreferenceManager @Inject constructor(@ApplicationContext private val context: Context) {
     
     private val sharedPreferences: SharedPreferences = 
-        PreferenceManager.getDefaultSharedPreferences(context)
+        androidx.preference.PreferenceManager.getDefaultSharedPreferences(context)
     
     companion object {
         private const val PREF_NICKNAME = "nickname"

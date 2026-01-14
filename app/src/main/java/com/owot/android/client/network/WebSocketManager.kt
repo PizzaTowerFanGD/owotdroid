@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
+import com.owot.android.client.BuildConfig
 import com.owot.android.client.data.models.*
 import kotlinx.coroutines.*
 import okhttp3.*

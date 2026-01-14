@@ -89,6 +89,13 @@ class WorldActivity : AppCompatActivity() {
     private fun setupViewModel(worldName: String) {
         val factory = WorldViewModelFactory(worldName, webSocketManager, application)
         viewModel = ViewModelProvider(this, factory)[WorldViewModel::class.java]
+        
+        // Initial connection if not connected
+        lifecycleScope.launch {
+            if (!viewModel.isConnected()) {
+                viewModel.connect()
+            }
+        }
     }
     
     private fun setupChat() {
@@ -120,7 +127,9 @@ class WorldActivity : AppCompatActivity() {
             if (viewModel.isConnected()) {
                 viewModel.disconnect()
             } else {
-                viewModel.connect()
+                lifecycleScope.launch {
+                    viewModel.connect()
+                }
             }
         }
         

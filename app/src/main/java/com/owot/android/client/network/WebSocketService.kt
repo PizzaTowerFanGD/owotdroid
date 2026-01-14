@@ -5,23 +5,17 @@ import android.content.Intent
 import android.os.IBinder
 import android.util.Log
 import androidx.annotation.Nullable
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
-import javax.inject.Inject
 
 /**
  * Background service for managing WebSocket connections
  * Keeps connections alive when app is in background
  */
-@AndroidEntryPoint
 class WebSocketService : Service() {
-    
-    @Inject
-    lateinit var webSocketManager: WebSocketManager
     
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     
@@ -29,6 +23,22 @@ class WebSocketService : Service() {
         private const val ACTION_CONNECT = "connect"
         private const val ACTION_DISCONNECT = "disconnect"
         private const val EXTRA_WORLD_NAME = "world_name"
+        private const val TAG = "WebSocketService"
+        
+        fun startConnection(context: android.content.Context, worldName: String) {
+            val intent = Intent(context, WebSocketService::class.java).apply {
+                action = ACTION_CONNECT
+                putExtra(EXTRA_WORLD_NAME, worldName)
+            }
+            context.startService(intent)
+        }
+        
+        fun stopConnection(context: android.content.Context) {
+            val intent = Intent(context, WebSocketService::class.java).apply {
+                action = ACTION_DISCONNECT
+            }
+            context.stopService(intent)
+        }
     }
     
     override fun onCreate() {
@@ -68,7 +78,7 @@ class WebSocketService : Service() {
         serviceScope.launch {
             try {
                 Log.d(TAG, "Service connecting to world: $worldName")
-                webSocketManager.connect(worldName)
+                // WebSocketManager connection would go here when Hilt is re-enabled
             } catch (e: Exception) {
                 Log.e(TAG, "Service connection failed", e)
             }
@@ -78,28 +88,9 @@ class WebSocketService : Service() {
     private fun disconnectFromWorld() {
         try {
             Log.d(TAG, "Service disconnecting from world")
-            webSocketManager.disconnect()
+            // WebSocketManager disconnection would go here when Hilt is re-enabled
         } catch (e: Exception) {
             Log.e(TAG, "Service disconnection failed", e)
-        }
-    }
-    
-    companion object {
-        private const val TAG = "WebSocketService"
-        
-        fun startConnection(context: android.content.Context, worldName: String) {
-            val intent = Intent(context, WebSocketService::class.java).apply {
-                action = ACTION_CONNECT
-                putExtra(EXTRA_WORLD_NAME, worldName)
-            }
-            context.startService(intent)
-        }
-        
-        fun stopConnection(context: android.content.Context) {
-            val intent = Intent(context, WebSocketService::class.java).apply {
-                action = ACTION_DISCONNECT
-            }
-            context.startService(intent)
         }
     }
 }

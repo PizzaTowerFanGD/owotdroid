@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -66,7 +67,7 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun setupViewModel() {
-        viewModel = MainViewModel()
+        viewModel = ViewModelProvider(this)[MainViewModel::class.java]
     }
     
     private fun setupRecyclerView() {

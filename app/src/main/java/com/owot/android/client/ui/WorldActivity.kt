@@ -289,6 +289,11 @@ class WorldActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.onResume()
+        
+        // Check that activity is in valid state before proceeding
+        if (!isFinishing && !isDestroyed) {
+            viewModel.onActivityResume()
+        }
     }
     
     override fun onPause() {

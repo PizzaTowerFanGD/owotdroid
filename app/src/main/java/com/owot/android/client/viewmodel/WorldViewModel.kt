@@ -635,6 +635,19 @@ class WorldViewModel(
         }
     }
     
+    /**
+     * Called when activity confirms it's in valid state to proceed
+     */
+    fun onActivityResume() {
+        // This is called after the activity has verified it's not finishing/destroyed
+        // Additional safety checks can be added here
+        if (!isConnected()) {
+            viewModelScope.launch {
+                connect()
+            }
+        }
+    }
+    
     fun onPause() {
         flushWriteBuffer()
     }

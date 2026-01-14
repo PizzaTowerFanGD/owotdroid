@@ -51,9 +51,6 @@ android {
         correctErrorTypes = true
         useBuildCache = true
         includeCompileClasspath = false
-
-        // Enable incremental annotation processing for faster builds
-        incremental = true
         
         javacOptions {
             option("-Xmaxerrs", 500)

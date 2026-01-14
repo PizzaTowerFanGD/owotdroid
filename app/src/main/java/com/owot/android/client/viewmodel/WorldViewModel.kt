@@ -218,19 +218,19 @@ class WorldViewModel(
                 currentTiles["$tileX,$tileY"] = tile
             }
         }
-        _tiles.postValue(currentTiles)
+        _tiles.value = currentTiles
     }
     
     /**
      * Handle write response
      */
     private fun handleWriteResponse(response: WriteResponse) {
-        response.rejected.forEach { (editId, reason) ->
+        response.rejected.forEach { (_, reason) ->
             _error.postValue("Edit rejected: $reason")
         }
         
         // Process link queue for accepted edits
-        response.accepted.forEach { editId ->
+        response.accepted.forEach { _ ->
             // Process pending links for this edit
         }
     }
@@ -270,7 +270,7 @@ class WorldViewModel(
             tile.lastModified = update.timestamp
             
             // Update the map to trigger StateFlow collectors
-            _tiles.postValue(currentTiles)
+            _tiles.value = currentTiles
             
             // Mark tile for re-render
             renderQueue.add(tileKey)
@@ -424,8 +424,9 @@ class WorldViewModel(
                 val zoom = _zoom.value
                 
                 // Calculate visible tile range
-                val viewportWidth = 1920 // This should come from SurfaceView
-                val viewportHeight = 1080
+                // These should come from SurfaceView but are hardcoded for now
+                // val viewportWidth = 1920 
+                // val viewportHeight = 1080
                 
                 val centerTileX = ((-cameraPos.first) / (16 * 12 * zoom)).toInt()
                 val centerTileY = ((-cameraPos.second) / (8 * 16 * zoom)).toInt()
@@ -549,7 +550,7 @@ class WorldViewModel(
                 
                 tile.setCharacter(charX, charY, character)
                 currentTiles[tileKey] = tile
-                _tiles.postValue(currentTiles)
+                _tiles.value = currentTiles
                 
                 // Add to write buffer
                 val editData = EditData(
@@ -617,7 +618,7 @@ class WorldViewModel(
         serverProperties.color?.let { properties.color = it.toIntArray() }
         serverProperties.bgcolor?.let { properties.bgColor = it.toIntArray() }
         serverProperties.char?.let { properties.charWritability = it.toIntArray() }
-        serverProperties.cellProps?.let { cellProps ->
+        serverProperties.cellProps?.let { _ ->
             // Convert cell properties
         }
         

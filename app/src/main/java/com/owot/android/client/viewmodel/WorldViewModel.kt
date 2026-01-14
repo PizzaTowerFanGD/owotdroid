@@ -201,20 +201,24 @@ class WorldViewModel(
      * Handle fetch response
      */
     private fun handleFetchResponse(response: FetchResponse) {
+        val currentTiles = _tiles.value.toMutableMap()
         response.tiles.forEach { (key, serverTile) ->
-            val (tileY, tileX) = key.split(",").map { it.toInt() }
-            
-            val tile = Tile(
-                tileX = tileX,
-                tileY = tileY,
-                content = serverTile.content.toCharArray(),
-                properties = convertServerTileProperties(serverTile.properties)
-            )
-            
-            _tiles.value[_tiles.value.toMutableMap().apply {
-                put("$tileX,$tileY", tile)
-            }.keys.firstOrNull() ?: "$tileX,$tileY"] = tile
+            val parts = key.split(",")
+            if (parts.size == 2) {
+                val tileX = parts[0].toInt()
+                val tileY = parts[1].toInt()
+                
+                val tile = Tile(
+                    tileX = tileX,
+                    tileY = tileY,
+                    content = serverTile.content.toCharArray(),
+                    properties = convertServerTileProperties(serverTile.properties)
+                )
+                
+                currentTiles["$tileX,$tileY"] = tile
+            }
         }
+        _tiles.value = currentTiles
     }
     
     /**
@@ -264,6 +268,9 @@ class WorldViewModel(
             update.bgColor?.let { tile.properties.bgColor[update.charY * 16 + update.charX] = it }
             
             tile.lastModified = update.timestamp
+            
+            // Update the map to trigger StateFlow collectors
+            _tiles.value = currentTiles
             
             // Mark tile for re-render
             renderQueue.add(tileKey)

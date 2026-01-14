@@ -10,6 +10,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -25,6 +26,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 /**
  * Main world activity with canvas rendering and interaction
@@ -196,9 +199,9 @@ class WorldActivity : AppCompatActivity() {
             MotionEvent.ACTION_MOVE -> {
                 val currentPoint = Point(event.x.toInt(), event.y.toInt())
                 val distance = lastTouchPoint?.let { 
-                    kotlin.math.sqrt(
-                        kotlin.math.pow((currentPoint.x - it.x).toDouble(), 2.0) +
-                        kotlin.math.pow((currentPoint.y - it.y).toDouble(), 2.0)
+                    sqrt(
+                        (currentPoint.x - it.x).toDouble().pow(2.0) +
+                        (currentPoint.y - it.y).toDouble().pow(2.0)
                     )
                 }?.toInt() ?: 0
                 

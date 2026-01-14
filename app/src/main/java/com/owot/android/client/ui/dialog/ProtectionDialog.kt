@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import com.owot.android.client.R
+import com.owot.android.client.data.models.ProtectionType
 import com.owot.android.client.util.OWOTUtils
 
 /**

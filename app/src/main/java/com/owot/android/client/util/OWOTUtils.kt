@@ -191,8 +191,8 @@ object OWOTUtils {
      * Convert world coordinates to tile coordinates
      */
     fun worldToTile(worldX: Int, worldY: Int, tileWidth: Int = 16, tileHeight: Int = 8): Pair<Int, Int> {
-        val tileX = kotlin.math.floorDiv(worldX, tileWidth)
-        val tileY = kotlin.math.floorDiv(worldY, tileHeight)
+        val tileX = worldX.floorDiv(tileWidth)
+        val tileY = worldY.floorDiv(tileHeight)
         return Pair(tileX, tileY)
     }
     

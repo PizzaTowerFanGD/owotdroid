@@ -85,10 +85,10 @@ class WorldViewModel(
         }
         
         webSocketManager.onConnectionStateListener = { isConnected, isConnecting ->
-            _clientState.value = _clientState.value?.copy(
+            _clientState.postValue(_clientState.value?.copy(
                 isConnected = isConnected,
                 isConnecting = isConnecting
-            ) ?: ClientState(isConnected = isConnected, isConnecting = isConnecting)
+            ) ?: ClientState(isConnected = isConnected, isConnecting = isConnecting))
             
             if (isConnected) {
                 // Send initial fetch request
@@ -116,9 +116,9 @@ class WorldViewModel(
                     autoScroll = true,
                     chatEnabled = true
                 )
-                userPreferences.value = preferences
+                userPreferences.postValue(preferences)
             } catch (e: Exception) {
-                _error.value = "Failed to load preferences: ${e.message}"
+                _error.postValue("Failed to load preferences: ${e.message}")
             }
         }
     }
@@ -143,18 +143,18 @@ class WorldViewModel(
             val success = webSocketManager.connect(worldName)
             if (success) {
                 // Update world info
-                _worldInfo.value = WorldInfo(
+                _worldInfo.postValue(WorldInfo(
                     name = worldName,
                     title = worldName,
                     description = "Connected to $worldName",
                     userCount = 0,
                     isMember = false,
                     canWrite = true
-                )
+                ))
             }
             success
         } catch (e: Exception) {
-            _error.value = "Connection failed: ${e.message}"
+            _error.postValue("Connection failed: ${e.message}")
             false
         }
     }
@@ -218,7 +218,7 @@ class WorldViewModel(
                 currentTiles["$tileX,$tileY"] = tile
             }
         }
-        _tiles.value = currentTiles
+        _tiles.postValue(currentTiles)
     }
     
     /**
@@ -241,7 +241,7 @@ class WorldViewModel(
     private fun handleChatMessage(chatResponse: ChatResponse) {
         val currentMessages = _chatMessages.value ?: emptyList()
         val updatedMessages = currentMessages + chatResponse
-        _chatMessages.value = updatedMessages
+        _chatMessages.postValue(updatedMessages)
     }
     
     /**
@@ -249,7 +249,7 @@ class WorldViewModel(
      */
     private fun handleChatHistory(history: ChatHistoryResponse) {
         val allMessages = history.globalChatPrev + history.pageChatPrev
-        _chatMessages.value = allMessages.sortedBy { it.date }
+        _chatMessages.postValue(allMessages.sortedBy { it.date })
     }
     
     /**
@@ -270,7 +270,7 @@ class WorldViewModel(
             tile.lastModified = update.timestamp
             
             // Update the map to trigger StateFlow collectors
-            _tiles.value = currentTiles
+            _tiles.postValue(currentTiles)
             
             // Mark tile for re-render
             renderQueue.add(tileKey)
@@ -298,33 +298,33 @@ class WorldViewModel(
     private fun handlePropertyUpdate(update: PropertyUpdateMessage) {
         val currentWorldInfo = _worldInfo.value ?: return
         
-        _worldInfo.value = currentWorldInfo.copy(
+        _worldInfo.postValue(currentWorldInfo.copy(
             isMember = update.data.isMember ?: currentWorldInfo.isMember,
             canWrite = update.data.writability?.let { it <= TileProperties.WRITABILITY_MEMBER } 
                 ?: currentWorldInfo.canWrite
-        )
+        ))
     }
     
     /**
      * Handle user count updates
      */
     private fun handleUserCount(countMessage: UserCountMessage) {
-        _clientState.value = _clientState.value?.copy(userCount = countMessage.count)
-        _worldInfo.value = _worldInfo.value?.copy(userCount = countMessage.count)
+        _clientState.postValue(_clientState.value?.copy(userCount = countMessage.count))
+        _worldInfo.postValue(_worldInfo.value?.copy(userCount = countMessage.count))
     }
     
     /**
      * Handle announcements
      */
     private fun handleAnnouncement(announcement: AnnouncementMessage) {
-        _announcements.value = announcement.message
+        _announcements.postValue(announcement.message)
     }
     
     /**
      * Handle errors
      */
     private fun handleError(error: ErrorMessage) {
-        _error.value = "Server error: ${error.message}"
+        _error.postValue("Server error: ${error.message}")
     }
     
     /**
@@ -353,7 +353,7 @@ class WorldViewModel(
                 webSocketManager.sendMessage(fetchMessage)
                 
             } catch (e: Exception) {
-                _error.value = "Failed to fetch tiles: ${e.message}"
+                _error.postValue("Failed to fetch tiles: ${e.message}")
             }
         }
     }
@@ -376,7 +376,7 @@ class WorldViewModel(
                 webSocketManager.sendMessage(chatMessage)
                 
             } catch (e: Exception) {
-                _error.value = "Failed to send chat: ${e.message}"
+                _error.postValue("Failed to send chat: ${e.message}")
             }
         }
     }
@@ -535,7 +535,7 @@ class WorldViewModel(
             try {
                 // Check permissions
                 if (!canWriteAt(tileX, tileY)) {
-                    _error.value = "You don't have permission to write at this location"
+                    _error.postValue("You don't have permission to write at this location")
                     return@launch
                 }
                 
@@ -549,7 +549,7 @@ class WorldViewModel(
                 
                 tile.setCharacter(charX, charY, character)
                 currentTiles[tileKey] = tile
-                _tiles.value = currentTiles
+                _tiles.postValue(currentTiles)
                 
                 // Add to write buffer
                 val editData = EditData(
@@ -575,7 +575,7 @@ class WorldViewModel(
                 }
                 
             } catch (e: Exception) {
-                _error.value = "Failed to write character: ${e.message}"
+                _error.postValue("Failed to write character: ${e.message}")
             }
         }
     }

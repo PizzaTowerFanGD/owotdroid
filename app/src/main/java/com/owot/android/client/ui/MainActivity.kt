@@ -162,8 +162,9 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         viewModel.loadWorlds()
         
-        // Auto-connect to last world if enabled
-        if (preferenceManager.getAutoConnect()) {
+        // Auto-connect to last world if enabled and activity is in valid state
+        // Check that activity is not finishing and is in the foreground
+        if (!isFinishing && !isDestroyed && preferenceManager.getAutoConnect()) {
             val lastWorld = preferenceManager.getLastWorld()
             if (lastWorld != null) {
                 WorldActivity.start(this, lastWorld)

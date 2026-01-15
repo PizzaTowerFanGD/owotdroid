@@ -132,7 +132,7 @@ class WebSocketManager(private val context: Context) {
             currentRequest = request
             
             withContext(Dispatchers.IO) {
-                val webSocket = client?.newWebSocket(request, object : WebSocketListener() {
+                client?.newWebSocket(request, object : WebSocketListener() {
                     override fun onOpen(webSocket: WebSocket, response: Response) {
                         Log.d(TAG, "WebSocket connected to $worldName")
                         this@WebSocketManager.webSocket = webSocket

@@ -312,8 +312,8 @@ class OWOTRenderer(
                 val character = tile.content[charIndex]
                 
                 if (character != ' ') {
-                    val charX = charX * this.cellWidth
-                    val charY = charY * this.cellHeight + textPaint.fontMetrics.ascent
+                    val screenX = charX * this.cellWidth
+                    val screenY = charY * this.cellHeight + textPaint.fontMetrics.ascent
                     
                     // Set character color
                     val color = tile.properties.color[charIndex]
@@ -326,8 +326,8 @@ class OWOTRenderer(
                     // Draw character
                     tileCanvas.drawText(
                         character.toString(),
-                        charX,
-                        charY,
+                        screenX,
+                        screenY,
                         textPaint
                     )
                     
@@ -423,7 +423,7 @@ class OWOTRenderer(
         screenX: Float,
         screenY: Float
     ) {
-        cursors.forEach { (userId, cursor) ->
+        cursors.forEach { (_, cursor) ->
             if (cursor.tileX == tileX && cursor.tileY == tileY) {
                 val cursorPaint = Paint().apply {
                     color = Color.GREEN // Different color for guest cursors

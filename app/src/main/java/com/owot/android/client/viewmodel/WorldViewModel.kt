@@ -401,6 +401,7 @@ class WorldViewModel(
      */
     fun onLongPressAt(tileX: Int, tileY: Int, charX: Int, charY: Int) {
         // TODO: Show context menu for selection, protection, etc.
+        // Parameters are kept for interface consistency
     }
     
     /**
@@ -518,6 +519,7 @@ class WorldViewModel(
      */
     private fun openUrl(url: String) {
         // This would be implemented by the activity
+        // URL parameter kept for interface consistency
     }
     
     /**
@@ -526,6 +528,7 @@ class WorldViewModel(
     private fun centerOn(tileX: Int, tileY: Int, charX: Int = 0, charY: Int = 0) {
         // This would update camera position to center on given coordinates
         // Implementation depends on SurfaceView
+        // Parameters are kept for interface consistency
     }
     
     /**
@@ -629,7 +632,7 @@ class WorldViewModel(
             properties.charWritability = parseColorArrayData(charData, 128)
         }
         
-        serverProperties.cellProps?.let { cellProps ->
+        serverProperties.cellProps?.let { _ ->
             // Convert cell properties
         }
         

@@ -615,14 +615,93 @@ class WorldViewModel(
         val properties = TileProperties()
         
         serverProperties.writability?.let { properties.writability = it }
-        serverProperties.color?.let { properties.color = it.toIntArray() }
-        serverProperties.bgcolor?.let { properties.bgColor = it.toIntArray() }
-        serverProperties.char?.let { properties.charWritability = it.toIntArray() }
-        serverProperties.cellProps?.let { _ ->
+        
+        // Handle color data flexibly - can be List<Int>, String, or Int
+        serverProperties.color?.let { colorData ->
+            properties.color = parseColorArrayData(colorData, 128) // 128 characters per tile
+        }
+        
+        serverProperties.bgcolor?.let { bgColorData ->
+            properties.bgColor = parseColorArrayData(bgColorData, 128)
+        }
+        
+        serverProperties.char?.let { charData ->
+            properties.charWritability = parseColorArrayData(charData, 128)
+        }
+        
+        serverProperties.cellProps?.let { cellProps ->
             // Convert cell properties
         }
         
         return properties
+    }
+    
+    /**
+     * Parse color/array data that can be in various formats
+     */
+    private fun parseColorArrayData(data: Any?, defaultSize: Int): IntArray {
+        val colorArray = IntArray(defaultSize) { -1 }
+        
+        data?.let {
+            when (it) {
+                is List<*> -> {
+                    // Handle List<Int>
+                    it.forEachIndexed { index, value ->
+                        if (index < defaultSize) {
+                            colorArray[index] = when (value) {
+                                is Number -> value.toInt()
+                                is String -> parseColorString(value) ?: -1
+                                else -> -1
+                            }
+                        }
+                    }
+                }
+                is String -> {
+                    // Handle string like "1,2,3,4" or hex colors
+                    if (it.contains(",")) {
+                        it.split(",").forEachIndexed { index, colorStr ->
+                            if (index < defaultSize) {
+                                colorArray[index] = parseColorString(colorStr.trim()) ?: -1
+                            }
+                        }
+                    } else {
+                        // Single color value
+                        val parsedColor = parseColorString(it)
+                        if (parsedColor != null) {
+                            colorArray[0] = parsedColor
+                        }
+                    }
+                }
+                is Number -> {
+                    // Single integer color
+                    colorArray[0] = it.toInt()
+                }
+            }
+        }
+        
+        return colorArray
+    }
+    
+    /**
+     * Parse a color string (hex, decimal, etc.) to integer
+     */
+    private fun parseColorString(colorStr: String): Int? {
+        return try {
+            when {
+                colorStr.startsWith("#") -> {
+                    android.graphics.Color.parseColor(colorStr)
+                }
+                colorStr.startsWith("0x") -> {
+                    colorStr.substring(2).toInt(16)
+                }
+                colorStr.all { it.isDigit() } -> {
+                    colorStr.toInt()
+                }
+                else -> null
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
     
     /**

@@ -317,11 +317,11 @@ data class ServerTileProperties(
     @SerializedName("writability")
     val writability: Int? = null,
     @SerializedName("color")
-    val color: List<Int>? = null,
+    val color: Any? = null, // Can be List<Int>, String, or Int
     @SerializedName("bgcolor")
-    val bgcolor: List<Int>? = null,
+    val bgcolor: Any? = null, // Can be List<Int>, String, or Int
     @SerializedName("char")
-    val char: List<Int>? = null
+    val char: Any? = null // Can be List<Int>, String, or Int
 )
 
 /**

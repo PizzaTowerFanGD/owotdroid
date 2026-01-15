@@ -218,19 +218,19 @@ class WorldViewModel(
                 currentTiles["$tileX,$tileY"] = tile
             }
         }
-        _tiles.postValue(currentTiles)
+        _tiles.value = currentTiles
     }
     
     /**
      * Handle write response
      */
     private fun handleWriteResponse(response: WriteResponse) {
-        response.rejected.forEach { (editId, reason) ->
+        response.rejected.forEach { (_, reason) ->
             _error.postValue("Edit rejected: $reason")
         }
         
         // Process link queue for accepted edits
-        response.accepted.forEach { editId ->
+        response.accepted.forEach { _ ->
             // Process pending links for this edit
         }
     }
@@ -270,7 +270,7 @@ class WorldViewModel(
             tile.lastModified = update.timestamp
             
             // Update the map to trigger StateFlow collectors
-            _tiles.postValue(currentTiles)
+            _tiles.value = currentTiles
             
             // Mark tile for re-render
             renderQueue.add(tileKey)
@@ -401,6 +401,7 @@ class WorldViewModel(
      */
     fun onLongPressAt(tileX: Int, tileY: Int, charX: Int, charY: Int) {
         // TODO: Show context menu for selection, protection, etc.
+        // Parameters are kept for interface consistency
     }
     
     /**
@@ -424,8 +425,9 @@ class WorldViewModel(
                 val zoom = _zoom.value
                 
                 // Calculate visible tile range
-                val viewportWidth = 1920 // This should come from SurfaceView
-                val viewportHeight = 1080
+                // These should come from SurfaceView but are hardcoded for now
+                // val viewportWidth = 1920 
+                // val viewportHeight = 1080
                 
                 val centerTileX = ((-cameraPos.first) / (16 * 12 * zoom)).toInt()
                 val centerTileY = ((-cameraPos.second) / (8 * 16 * zoom)).toInt()
@@ -517,6 +519,7 @@ class WorldViewModel(
      */
     private fun openUrl(url: String) {
         // This would be implemented by the activity
+        // URL parameter kept for interface consistency
     }
     
     /**
@@ -525,6 +528,7 @@ class WorldViewModel(
     private fun centerOn(tileX: Int, tileY: Int, charX: Int = 0, charY: Int = 0) {
         // This would update camera position to center on given coordinates
         // Implementation depends on SurfaceView
+        // Parameters are kept for interface consistency
     }
     
     /**
@@ -549,7 +553,7 @@ class WorldViewModel(
                 
                 tile.setCharacter(charX, charY, character)
                 currentTiles[tileKey] = tile
-                _tiles.postValue(currentTiles)
+                _tiles.value = currentTiles
                 
                 // Add to write buffer
                 val editData = EditData(
@@ -614,14 +618,93 @@ class WorldViewModel(
         val properties = TileProperties()
         
         serverProperties.writability?.let { properties.writability = it }
-        serverProperties.color?.let { properties.color = it.toIntArray() }
-        serverProperties.bgcolor?.let { properties.bgColor = it.toIntArray() }
-        serverProperties.char?.let { properties.charWritability = it.toIntArray() }
-        serverProperties.cellProps?.let { cellProps ->
+        
+        // Handle color data flexibly - can be List<Int>, String, or Int
+        serverProperties.color?.let { colorData ->
+            properties.color = parseColorArrayData(colorData, 128) // 128 characters per tile
+        }
+        
+        serverProperties.bgcolor?.let { bgColorData ->
+            properties.bgColor = parseColorArrayData(bgColorData, 128)
+        }
+        
+        serverProperties.char?.let { charData ->
+            properties.charWritability = parseColorArrayData(charData, 128)
+        }
+        
+        serverProperties.cellProps?.let { _ ->
             // Convert cell properties
         }
         
         return properties
+    }
+    
+    /**
+     * Parse color/array data that can be in various formats
+     */
+    private fun parseColorArrayData(data: Any?, defaultSize: Int): IntArray {
+        val colorArray = IntArray(defaultSize) { -1 }
+        
+        data?.let {
+            when (it) {
+                is List<*> -> {
+                    // Handle List<Int>
+                    it.forEachIndexed { index, value ->
+                        if (index < defaultSize) {
+                            colorArray[index] = when (value) {
+                                is Number -> value.toInt()
+                                is String -> parseColorString(value) ?: -1
+                                else -> -1
+                            }
+                        }
+                    }
+                }
+                is String -> {
+                    // Handle string like "1,2,3,4" or hex colors
+                    if (it.contains(",")) {
+                        it.split(",").forEachIndexed { index, colorStr ->
+                            if (index < defaultSize) {
+                                colorArray[index] = parseColorString(colorStr.trim()) ?: -1
+                            }
+                        }
+                    } else {
+                        // Single color value
+                        val parsedColor = parseColorString(it)
+                        if (parsedColor != null) {
+                            colorArray[0] = parsedColor
+                        }
+                    }
+                }
+                is Number -> {
+                    // Single integer color
+                    colorArray[0] = it.toInt()
+                }
+            }
+        }
+        
+        return colorArray
+    }
+    
+    /**
+     * Parse a color string (hex, decimal, etc.) to integer
+     */
+    private fun parseColorString(colorStr: String): Int? {
+        return try {
+            when {
+                colorStr.startsWith("#") -> {
+                    android.graphics.Color.parseColor(colorStr)
+                }
+                colorStr.startsWith("0x") -> {
+                    colorStr.substring(2).toInt(16)
+                }
+                colorStr.all { it.isDigit() } -> {
+                    colorStr.toInt()
+                }
+                else -> null
+            }
+        } catch (e: Exception) {
+            null
+        }
     }
     
     /**

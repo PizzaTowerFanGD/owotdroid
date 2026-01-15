@@ -41,6 +41,7 @@ class SettingsActivity : AppCompatActivity() {
         
         // This would populate the settings UI with current values
         // Implementation would populate EditText fields, switches, etc.
+        // TODO: Use the loaded preferences to populate the UI
     }
     
     private fun saveSettings() {

@@ -216,6 +216,7 @@ class OWOTSurfaceView @JvmOverloads constructor(
      * Handle drag operations
      */
     private fun onDrag(currentX: Float, currentY: Float, deltaX: Float, deltaY: Float) {
+        // currentX and currentY parameters are kept for interface consistency
         if (!isDragging) {
             isDragging = true
             hideUi()
@@ -320,7 +321,7 @@ class OWOTSurfaceView @JvmOverloads constructor(
     private fun hideUi() {
         // This would hide floating action buttons and other UI elements
         // Implementation depends on parent activity's UI structure
-        (context as? WorldActivity)?.let { activity ->
+        (context as? WorldActivity)?.let { _ ->
             // Hide UI elements
         }
     }
@@ -346,7 +347,7 @@ class OWOTSurfaceView @JvmOverloads constructor(
      */
     private fun showUi() {
         // This would show floating action buttons and other UI elements
-        (context as? WorldActivity)?.let { activity ->
+        (context as? WorldActivity)?.let { _ ->
             // Show UI elements
         }
     }
@@ -376,12 +377,14 @@ class OWOTSurfaceView @JvmOverloads constructor(
     }
     
     fun onDragEnd(x: Float, y: Float) {
+        // x and y parameters are kept for interface consistency
         lastTouchPoint = null
         isDragging = false
         resetUiHideTimer()
     }
     
     fun onTap(x: Float, y: Float) {
+        // x and y parameters are kept for interface consistency
         onTapAt(x, y)
     }
     

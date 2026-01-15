@@ -132,7 +132,7 @@ class WebSocketManager(private val context: Context) {
             currentRequest = request
             
             withContext(Dispatchers.IO) {
-                val webSocket = client?.newWebSocket(request, object : WebSocketListener() {
+                client?.newWebSocket(request, object : WebSocketListener() {
                     override fun onOpen(webSocket: WebSocket, response: Response) {
                         Log.d(TAG, "WebSocket connected to $worldName")
                         this@WebSocketManager.webSocket = webSocket
@@ -225,10 +225,11 @@ class WebSocketManager(private val context: Context) {
      */
     private fun handleMessage(json: String) {
         try {
-            val message = gson.fromJson(json, WSMessage::class.java)
-            Log.d(TAG, "Received message: ${message.kind}")
+            // First parse as a generic map to determine the message kind
+            val jsonObject = gson.fromJson(json, Map::class.java)
+            val kind = jsonObject["kind"] as? String
             
-            when (message.kind) {
+            when (kind) {
                 "channel" -> handleChannelResponse(gson.fromJson(json, ChannelResponse::class.java))
                 "ping" -> handlePing(gson.fromJson(json, PongMessage::class.java))
                 "announcement" -> handleAnnouncement(gson.fromJson(json, AnnouncementMessage::class.java))
@@ -236,9 +237,14 @@ class WebSocketManager(private val context: Context) {
                 "user_count" -> handleUserCount(gson.fromJson(json, UserCountMessage::class.java))
                 "error" -> handleError(gson.fromJson(json, ErrorMessage::class.java))
                 "tileUpdate" -> handleTileUpdate(gson.fromJson(json, TileUpdateMessage::class.java))
+                "fetch" -> handleFetchResponse(gson.fromJson(json, FetchResponse::class.java))
+                "write" -> handleWriteResponse(gson.fromJson(json, WriteResponse::class.java))
+                "chat" -> handleChatMessage(gson.fromJson(json, ChatResponse::class.java))
+                "chathistory" -> handleChatHistory(gson.fromJson(json, ChatHistoryResponse::class.java))
+                "cursor" -> handleCursorMessage(gson.fromJson(json, CursorMessage::class.java))
                 else -> {
-                    // Forward other messages to the listener
-                    onMessageListener?.invoke(message)
+                    Log.w(TAG, "Unknown message kind: $kind")
+                    onErrorListener?.invoke("Unknown message type: $kind")
                 }
             }
         } catch (e: JsonSyntaxException) {
@@ -325,6 +331,46 @@ class WebSocketManager(private val context: Context) {
     private fun handleTileUpdate(update: TileUpdateMessage) {
         Log.d(TAG, "Tile update: ${update.tileX},${update.tileY} -> ${update.character}")
         onMessageListener?.invoke(update)
+    }
+    
+    /**
+     * Handle fetch response from server
+     */
+    private fun handleFetchResponse(response: FetchResponse) {
+        Log.d(TAG, "Fetch response received with ${response.tiles.size} tiles")
+        onMessageListener?.invoke(response)
+    }
+    
+    /**
+     * Handle write response from server
+     */
+    private fun handleWriteResponse(response: WriteResponse) {
+        Log.d(TAG, "Write response: ${response.accepted.size} accepted, ${response.rejected.size} rejected")
+        onMessageListener?.invoke(response)
+    }
+    
+    /**
+     * Handle chat message from server
+     */
+    private fun handleChatMessage(chatMessage: ChatResponse) {
+        Log.d(TAG, "Chat message from ${chatMessage.nickname}: ${chatMessage.message}")
+        onMessageListener?.invoke(chatMessage)
+    }
+    
+    /**
+     * Handle chat history response from server
+     */
+    private fun handleChatHistory(historyResponse: ChatHistoryResponse) {
+        Log.d(TAG, "Chat history: ${historyResponse.globalChatPrev.size} global, ${historyResponse.pageChatPrev.size} page messages")
+        onMessageListener?.invoke(historyResponse)
+    }
+    
+    /**
+     * Handle cursor message from server
+     */
+    private fun handleCursorMessage(cursorMessage: CursorMessage) {
+        Log.d(TAG, "Cursor update received")
+        onMessageListener?.invoke(cursorMessage)
     }
     
     /**

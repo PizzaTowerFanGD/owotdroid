@@ -48,9 +48,18 @@ class ChatMessageViewHolder(
         // Set message text
         binding.textMessage.text = message.message
         
-        // Set color if specified
-        message.color?.let { color ->
-            binding.textMessage.setTextColor(color)
+        // Set color if specified (parse hex string like "#FF0000" to color int)
+        message.color?.let { colorHex ->
+            try {
+                val colorInt = android.graphics.Color.parseColor(colorHex)
+                binding.textMessage.setTextColor(colorInt)
+            } catch (e: Exception) {
+                // If parsing fails, use default color
+                binding.textMessage.setTextColor(android.graphics.Color.BLACK)
+            }
+        } ?: run {
+            // No color specified, use default
+            binding.textMessage.setTextColor(android.graphics.Color.BLACK)
         }
         
         // Set timestamp

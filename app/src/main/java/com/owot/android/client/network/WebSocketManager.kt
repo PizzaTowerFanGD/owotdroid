@@ -143,6 +143,9 @@ class WebSocketManager(private val context: Context) {
                         
                         // Start ping job
                         startPingJob()
+                        
+                        // Request chat history on connection
+                        sendMessage(ChatHistoryMessage())
                     }
                     
                     override fun onMessage(webSocket: WebSocket, text: String) {

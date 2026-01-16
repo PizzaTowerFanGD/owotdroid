@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicReference
  * OWOT rendering engine for drawing the infinite text canvas
  */
 class OWOTRenderer(
-    private val canvas: Canvas,
     private val paint: Paint,
     private val textPaint: Paint,
     private val backgroundPaint: Paint
@@ -181,6 +180,7 @@ class OWOTRenderer(
      * Render visible tiles
      */
     fun renderVisibleTiles(
+        canvas: Canvas,
         tiles: Map<String, Tile>,
         width: Int,
         height: Int,
@@ -206,13 +206,14 @@ class OWOTRenderer(
         }
         
         // Process render queue
-        processRenderQueue(tiles, guestCursors, localCursor)
+        processRenderQueue(canvas, tiles, guestCursors, localCursor)
     }
     
     /**
      * Process the render queue
      */
     private fun processRenderQueue(
+        canvas: Canvas,
         tiles: Map<String, Tile>,
         guestCursors: Map<String, CursorPosition>?,
         localCursor: CursorPosition?
@@ -229,7 +230,7 @@ class OWOTRenderer(
                 
                 val tile = tiles[tileKey]
                 if (tile != null) {
-                    renderTile(tile, guestCursors, localCursor)
+                    renderTile(canvas, tile, guestCursors, localCursor)
                     renderedTiles++
                 }
                 
@@ -251,6 +252,7 @@ class OWOTRenderer(
      * Render a single tile
      */
     private fun renderTile(
+        canvas: Canvas,
         tile: Tile,
         guestCursors: Map<String, CursorPosition>?,
         localCursor: CursorPosition?
@@ -284,13 +286,13 @@ class OWOTRenderer(
         
         // Draw guest cursors on this tile
         guestCursors?.let { cursors ->
-            drawGuestCursors(cursors, tileX, tileY, screenX, screenY)
+            drawGuestCursors(canvas, cursors, tileX, tileY, screenX, screenY)
         }
         
         // Draw local cursor if on this tile
         localCursor?.let { cursor ->
             if (cursor.tileX == tileX && cursor.tileY == tileY) {
-                drawLocalCursor(cursor, screenX, screenY)
+                drawLocalCursor(canvas, cursor, screenX, screenY)
             }
         }
     }
@@ -442,6 +444,7 @@ class OWOTRenderer(
      * Draw guest cursors
      */
     private fun drawGuestCursors(
+        canvas: Canvas,
         cursors: Map<String, CursorPosition>,
         tileX: Int,
         tileY: Int,
@@ -473,6 +476,7 @@ class OWOTRenderer(
      * Draw local cursor
      */
     private fun drawLocalCursor(
+        canvas: Canvas,
         cursor: CursorPosition,
         screenX: Float,
         screenY: Float

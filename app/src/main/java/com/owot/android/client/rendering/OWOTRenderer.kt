@@ -13,7 +13,6 @@ import java.util.concurrent.atomic.AtomicReference
  * OWOT rendering engine for drawing the infinite text canvas
  */
 class OWOTRenderer(
-    private val canvas: Canvas,
     private val paint: Paint,
     private val textPaint: Paint,
     private val backgroundPaint: Paint
@@ -181,6 +180,7 @@ class OWOTRenderer(
      * Render visible tiles
      */
     fun renderVisibleTiles(
+        canvas: Canvas,
         tiles: Map<String, Tile>,
         width: Int,
         height: Int,
@@ -192,6 +192,19 @@ class OWOTRenderer(
         }
         
         canvas.drawColor(backgroundColor)
+        
+        // Debug: Draw a test pattern if no tiles
+        if (tiles.isEmpty()) {
+            val debugPaint = Paint().apply {
+                color = Color.RED
+                textSize = 40f
+                isAntiAlias = true
+            }
+            canvas.drawText("No tiles loaded", 50f, 100f, debugPaint)
+            canvas.drawText("Tiles: ${tiles.size}", 50f, 150f, debugPaint)
+            canvas.drawText("Zoom: $zoom", 50f, 200f, debugPaint)
+            canvas.drawText("Pos: $positionX, $positionY", 50f, 250f, debugPaint)
+        }
         
         val tileRange = getVisibleTileRange(width, height)
         
@@ -206,13 +219,14 @@ class OWOTRenderer(
         }
         
         // Process render queue
-        processRenderQueue(tiles, guestCursors, localCursor)
+        processRenderQueue(canvas, tiles, guestCursors, localCursor)
     }
     
     /**
      * Process the render queue
      */
     private fun processRenderQueue(
+        canvas: Canvas,
         tiles: Map<String, Tile>,
         guestCursors: Map<String, CursorPosition>?,
         localCursor: CursorPosition?
@@ -229,7 +243,7 @@ class OWOTRenderer(
                 
                 val tile = tiles[tileKey]
                 if (tile != null) {
-                    renderTile(tile, guestCursors, localCursor)
+                    renderTile(canvas, tile, guestCursors, localCursor)
                     renderedTiles++
                 }
                 
@@ -251,6 +265,7 @@ class OWOTRenderer(
      * Render a single tile
      */
     private fun renderTile(
+        canvas: Canvas,
         tile: Tile,
         guestCursors: Map<String, CursorPosition>?,
         localCursor: CursorPosition?
@@ -284,13 +299,13 @@ class OWOTRenderer(
         
         // Draw guest cursors on this tile
         guestCursors?.let { cursors ->
-            drawGuestCursors(cursors, tileX, tileY, screenX, screenY)
+            drawGuestCursors(canvas, cursors, tileX, tileY, screenX, screenY)
         }
         
         // Draw local cursor if on this tile
         localCursor?.let { cursor ->
             if (cursor.tileX == tileX && cursor.tileY == tileY) {
-                drawLocalCursor(cursor, screenX, screenY)
+                drawLocalCursor(canvas, cursor, screenX, screenY)
             }
         }
     }
@@ -309,37 +324,18 @@ class OWOTRenderer(
         for (charY in 0 until Tile.TILE_HEIGHT) {
             for (charX in 0 until Tile.TILE_WIDTH) {
                 val charIndex = charY * Tile.TILE_WIDTH + charX
-                val character = tile.content[charIndex]
+                val charStr = tile.content[charIndex]
                 
-                if (character != ' ') {
-                    val screenX = charX * this.cellWidth
-                    val screenY = charY * this.cellHeight + textPaint.fontMetrics.ascent
-                    
-                    // Set character color
-                    val color = tile.properties.color[charIndex]
-                    if (color != Color.BLACK) {
-                        textPaint.color = color
-                    } else {
-                        textPaint.color = textColor
-                    }
-                    
-                    // Draw character
-                    tileCanvas.drawText(
-                        character.toString(),
-                        screenX,
-                        screenY,
-                        textPaint
-                    )
-                    
-                    // Handle text decorations
-                    handleTextDecorations(tile, charIndex, screenX, screenY, tileCanvas)
-                }
-                
-                // Draw background color for this cell
+                // Draw background color for this cell first (behind text)
                 val bgColor = tile.properties.bgColor[charIndex]
                 if (bgColor != -1) {
                     val bgPaint = Paint().apply {
-                        color = bgColor
+                        // Add full opacity alpha channel if color is RGB only
+                        color = if ((bgColor and 0xFF000000.toInt()) == 0) {
+                            bgColor or 0xFF000000.toInt()  // Add opaque alpha
+                        } else {
+                            bgColor
+                        }
                         style = Paint.Style.FILL
                     }
                     tileCanvas.drawRect(
@@ -350,6 +346,78 @@ class OWOTRenderer(
                         bgPaint
                     )
                 }
+                
+                // Decode character and decorations
+                val decodedChar = TextDecorations.decode(charStr)
+                
+                if (decodedChar.char != ' ') {
+                    val screenX = charX * this.cellWidth
+                    val screenY = charY * this.cellHeight + textPaint.fontMetrics.ascent
+                    
+                    // Set character color (add alpha channel if not present for Android rendering)
+                    val color = tile.properties.color[charIndex]
+                    if (color != Color.BLACK && color != 0) {
+                        // Add full opacity alpha channel if color is RGB only
+                        textPaint.color = if ((color and 0xFF000000.toInt()) == 0) {
+                            color or 0xFF000000.toInt()  // Add opaque alpha
+                        } else {
+                            color
+                        }
+                    } else {
+                        textPaint.color = textColor
+                    }
+                    
+                    // Apply text decorations
+                    val originalTypeface = textPaint.typeface
+                    if (decodedChar.bold || decodedChar.italic) {
+                        val style = when {
+                            decodedChar.bold && decodedChar.italic -> Typeface.BOLD_ITALIC
+                            decodedChar.bold -> Typeface.BOLD
+                            decodedChar.italic -> Typeface.ITALIC
+                            else -> Typeface.NORMAL
+                        }
+                        textPaint.typeface = Typeface.create(fontFamily, style)
+                    }
+                    
+                    // Draw character
+                    tileCanvas.drawText(
+                        decodedChar.char.toString(),
+                        screenX,
+                        screenY,
+                        textPaint
+                    )
+                    
+                    // Restore typeface
+                    textPaint.typeface = originalTypeface
+                    
+                    // Draw underline
+                    if (decodedChar.underline) {
+                        val underlineY = charY * cellHeight + cellHeight - 2f
+                        decorationPaint.color = textPaint.color
+                        decorationPaint.strokeWidth = 1f
+                        tileCanvas.drawLine(
+                            screenX,
+                            underlineY,
+                            screenX + cellWidth,
+                            underlineY,
+                            decorationPaint
+                        )
+                    }
+                    
+                    // Draw strikethrough
+                    if (decodedChar.strikethrough) {
+                        val strikeY = charY * cellHeight + cellHeight / 2f
+                        decorationPaint.color = textPaint.color
+                        decorationPaint.strokeWidth = 1f
+                        tileCanvas.drawLine(
+                            screenX,
+                            strikeY,
+                            screenX + cellWidth,
+                            strikeY,
+                            decorationPaint
+                        )
+                    }
+                }
             }
         }
         
@@ -358,8 +426,9 @@ class OWOTRenderer(
     }
     
     /**
-     * Handle text decorations (bold, italic, underline, strikethrough)
+     * Legacy method - text decorations are now handled inline in renderTileContent
      */
+    @Deprecated("Text decorations are now handled inline")
     private fun handleTextDecorations(
         tile: Tile,
         charIndex: Int,
@@ -367,26 +436,7 @@ class OWOTRenderer(
         y: Float,
         tileCanvas: Canvas
     ) {
-        // This would parse Unicode combining characters for decorations
-        // For now, we'll implement basic underline support
-        
-        val character = tile.content[charIndex]
-        if (character.code >= 0x20F0 && character.code <= 0x20FF) {
-            when (character.code) {
-                CharacterDecoration.UNDERLINE.unicode -> {
-                    decorationPaint.color = textPaint.color
-                    decorationPaint.strokeWidth = 2f
-                    tileCanvas.drawLine(
-                        x,
-                        y + textPaint.textSize * 0.1f,
-                        x + textPaint.measureText(character.toString()),
-                        y + textPaint.textSize * 0.1f,
-                        decorationPaint
-                    )
-                }
-                // Add other decorations as needed
-            }
-        }
+        // No longer used - decorations are decoded and rendered inline
     }
     
     /**
@@ -417,6 +467,7 @@ class OWOTRenderer(
      * Draw guest cursors
      */
     private fun drawGuestCursors(
+        canvas: Canvas,
         cursors: Map<String, CursorPosition>,
         tileX: Int,
         tileY: Int,
@@ -448,6 +499,7 @@ class OWOTRenderer(
      * Draw local cursor
      */
     private fun drawLocalCursor(
+        canvas: Canvas,
         cursor: CursorPosition,
         screenX: Float,
         screenY: Float

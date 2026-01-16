@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
         WorldPropertiesEntity::class,
         UserPreferencesEntity::class
     ],
-    version = 1,
+    version = 3, // Incremented for chat color type change (Int -> String) and tile content (CharArray -> Array<String>)
     exportSchema = false
 )
 @TypeConverters(Converters::class)

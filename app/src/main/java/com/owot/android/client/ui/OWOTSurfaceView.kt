@@ -120,19 +120,14 @@ class OWOTSurfaceView @JvmOverloads constructor(
      * Setup the OWOT renderer
      */
     private fun setupRenderer() {
-        val canvas = holder.lockCanvas()
-        if (canvas != null) {
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                textAlign = Paint.Align.LEFT
-            }
-            val backgroundPaint = Paint()
-            
-            renderer = OWOTRenderer(canvas, paint, textPaint, backgroundPaint)
-            isInitialized = true
-            
-            holder.unlockCanvasAndPost(canvas)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            textAlign = Paint.Align.LEFT
         }
+        val backgroundPaint = Paint()
+        
+        renderer = OWOTRenderer(paint, textPaint, backgroundPaint)
+        isInitialized = true
     }
     
     /**
@@ -175,8 +170,8 @@ class OWOTSurfaceView @JvmOverloads constructor(
             renderer?.updatePosition(positionX, positionY)
             renderer?.updateZoom(zoom)
             
-            // Render visible tiles
-            renderer?.renderVisibleTiles(tiles, width, height, guestCursors, localCursor)
+            // Render visible tiles - pass the canvas
+            renderer?.renderVisibleTiles(canvas, tiles, width, height, guestCursors, localCursor)
             
         } catch (e: Exception) {
             Log.e(TAG, "Render error", e)

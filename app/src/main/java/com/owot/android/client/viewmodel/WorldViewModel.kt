@@ -205,14 +205,25 @@ class WorldViewModel(
         response.tiles.forEach { (key, serverTile) ->
             val parts = key.split(",")
             if (parts.size == 2) {
-                val tileX = parts[0].toInt()
-                val tileY = parts[1].toInt()
+                val tileY = parts[0].toInt()
+                val tileX = parts[1].toInt()
+                
+                // Parse tile content and properties using TileParser
+                val content = TileParser.parseContent(serverTile.content)
+                val colors = TileParser.parseColorArray(serverTile.properties.color)
+                val bgColors = TileParser.parseBgColorArray(serverTile.properties.bgcolor)
+                val cellProps = TileParser.parseCellProps(serverTile.properties.cellProps)
                 
                 val tile = Tile(
                     tileX = tileX,
                     tileY = tileY,
-                    content = serverTile.content.toCharArray(),
-                    properties = convertServerTileProperties(serverTile.properties)
+                    content = content,
+                    properties = TileProperties(
+                        writability = serverTile.properties.writability ?: TileProperties.WRITABILITY_PUBLIC,
+                        color = colors,
+                        bgColor = bgColors,
+                        cellProps = cellProps
+                    )
                 )
                 
                 currentTiles["$tileX,$tileY"] = tile
@@ -261,11 +272,13 @@ class WorldViewModel(
         val tile = currentTiles[tileKey]
         
         if (tile != null) {
-            tile.setCharacter(update.charX, update.charY, update.character[0])
+            // Store the full character string (may include decoration codes)
+            tile.setCharacter(update.charX, update.charY, update.character)
             
             // Update colors if provided
-            update.color?.let { tile.properties.color[update.charY * 16 + update.charX] = it }
-            update.bgColor?.let { tile.properties.bgColor[update.charY * 16 + update.charX] = it }
+            val charIndex = update.charY * 16 + update.charX
+            update.color?.let { tile.properties.color[charIndex] = it }
+            update.bgColor?.let { tile.properties.bgColor[charIndex] = it }
             
             tile.lastModified = update.timestamp
             
@@ -366,11 +379,14 @@ class WorldViewModel(
             try {
                 val preferences = userPreferences.value ?: return@launch
                 
+                // Convert Android color (ARGB) to hex string for chat (without alpha)
+                val colorHex = String.format("#%06X", preferences.textColor and 0x00FFFFFF)
+                
                 val chatMessage = ChatMessage(
                     nickname = preferences.nickname,
                     message = message,
                     location = ChatLocation.PAGE,
-                    color = preferences.textColor
+                    color = colorHex
                 )
                 
                 webSocketManager.sendMessage(chatMessage)
@@ -532,9 +548,21 @@ class WorldViewModel(
     }
     
     /**
-     * Write character at position
+     * Write character at position with optional decorations
      */
-    fun writeCharacter(tileX: Int, tileY: Int, charX: Int, charY: Int, character: Char) {
+    fun writeCharacter(
+        tileX: Int,
+        tileY: Int,
+        charX: Int,
+        charY: Int,
+        character: Char,
+        bold: Boolean = false,
+        italic: Boolean = false,
+        underline: Boolean = false,
+        strikethrough: Boolean = false,
+        textColor: Int? = null,
+        bgColor: Int? = null
+    ) {
         viewModelScope.launch {
             try {
                 // Check permissions
@@ -542,6 +570,15 @@ class WorldViewModel(
                     _error.postValue("You don't have permission to write at this location")
                     return@launch
                 }
+                
+                // Encode character with decorations
+                val encodedChar = TextDecorations.encode(
+                    char = character,
+                    bold = bold,
+                    italic = italic,
+                    underline = underline,
+                    strikethrough = strikethrough
+                )
                 
                 // Add to local tile immediately for instant feedback
                 val tileKey = "$tileX,$tileY"
@@ -551,7 +588,17 @@ class WorldViewModel(
                     Tile(tileX, tileY)
                 }
                 
-                tile.setCharacter(charX, charY, character)
+                tile.setCharacter(charX, charY, encodedChar)
+                
+                // Update colors if provided
+                val charIndex = charY * 16 + charX
+                if (textColor != null) {
+                    tile.properties.color[charIndex] = textColor
+                }
+                if (bgColor != null) {
+                    tile.properties.bgColor[charIndex] = bgColor
+                }
+                
                 currentTiles[tileKey] = tile
                 _tiles.value = currentTiles
                 
@@ -562,10 +609,10 @@ class WorldViewModel(
                     charY = charY,
                     charX = charX,
                     timestamp = System.currentTimeMillis(),
-                    character = character.toString(),
+                    character = encodedChar,
                     editId = webSocketManager.generateEditId(),
-                    color = userPreferences.value?.textColor,
-                    bgColor = userPreferences.value?.bgColor
+                    color = textColor ?: userPreferences.value?.textColor,
+                    bgColor = bgColor ?: userPreferences.value?.bgColor?.takeIf { it != -1 }
                 )
                 
                 writeBuffer.add(editData)
@@ -607,7 +654,10 @@ class WorldViewModel(
         val edits = writeBuffer.toList()
         writeBuffer.clear()
         
-        val writeMessage = WriteMessage(edits)
+        // Convert EditData to protocol arrays
+        val protocolEdits = edits.map { it.toProtocolArray() }
+        
+        val writeMessage = WriteMessage(edits = protocolEdits)
         webSocketManager.sendMessage(writeMessage)
     }
     
@@ -733,6 +783,83 @@ class WorldViewModel(
     
     fun onPause() {
         flushWriteBuffer()
+    }
+    
+    /**
+     * Create a URL link at position
+     */
+    fun createUrlLink(tileX: Int, tileY: Int, charX: Int, charY: Int, url: String) {
+        viewModelScope.launch {
+            try {
+                val linkMessage = LinkBuilder.createUrlLink(tileX, tileY, charX, charY, url)
+                webSocketManager.sendMessage(linkMessage)
+                
+                // Update local tile
+                val tileKey = "$tileX,$tileY"
+                val currentTiles = _tiles.value.toMutableMap()
+                val tile = currentTiles[tileKey]
+                
+                if (tile != null) {
+                    val charIndex = charY * 16 + charX
+                    val linkProps = LinkProperties(LinkType.URL, url = url)
+                    tile.properties.cellProps[charIndex] = CellProperties(link = linkProps)
+                    _tiles.value = currentTiles
+                }
+            } catch (e: Exception) {
+                _error.postValue("Failed to create link: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Create a coordinate link at position
+     */
+    fun createCoordLink(tileX: Int, tileY: Int, charX: Int, charY: Int, linkTileX: Int, linkTileY: Int) {
+        viewModelScope.launch {
+            try {
+                val linkMessage = LinkBuilder.createCoordLink(tileX, tileY, charX, charY, linkTileX, linkTileY)
+                webSocketManager.sendMessage(linkMessage)
+                
+                // Update local tile
+                val tileKey = "$tileX,$tileY"
+                val currentTiles = _tiles.value.toMutableMap()
+                val tile = currentTiles[tileKey]
+                
+                if (tile != null) {
+                    val charIndex = charY * 16 + charX
+                    val linkProps = LinkProperties(LinkType.COORD, linkTileX = linkTileX, linkTileY = linkTileY)
+                    tile.properties.cellProps[charIndex] = CellProperties(link = linkProps)
+                    _tiles.value = currentTiles
+                }
+            } catch (e: Exception) {
+                _error.postValue("Failed to create coordinate link: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Remove link at position
+     */
+    fun removeLink(tileX: Int, tileY: Int, charX: Int, charY: Int) {
+        viewModelScope.launch {
+            try {
+                val linkMessage = LinkBuilder.createNoteLink(tileX, tileY, charX, charY)
+                webSocketManager.sendMessage(linkMessage)
+                
+                // Update local tile
+                val tileKey = "$tileX,$tileY"
+                val currentTiles = _tiles.value.toMutableMap()
+                val tile = currentTiles[tileKey]
+                
+                if (tile != null) {
+                    val charIndex = charY * 16 + charX
+                    tile.properties.cellProps.remove(charIndex)
+                    _tiles.value = currentTiles
+                }
+            } catch (e: Exception) {
+                _error.postValue("Failed to remove link: ${e.message}")
+            }
+        }
     }
     
     /**

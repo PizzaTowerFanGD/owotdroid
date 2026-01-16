@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
         WorldPropertiesEntity::class,
         UserPreferencesEntity::class
     ],
-    version = 1,
+    version = 2, // Incremented for tile content schema change (CharArray -> Array<String>)
     exportSchema = false
 )
 @TypeConverters(Converters::class)

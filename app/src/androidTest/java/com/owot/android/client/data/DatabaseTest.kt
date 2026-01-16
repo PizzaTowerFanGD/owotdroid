@@ -38,11 +38,18 @@ class DatabaseTest {
     @Test
     fun testTileOperations() = runBlocking {
         // Test inserting a tile
+        val content = Array(128) { " " }
+        "Hello World".forEachIndexed { index, char ->
+            if (index < 128) {
+                content[index] = char.toString()
+            }
+        }
+        
         val tileEntity = TileEntity(
             tileKey = "0,0",
             tileX = 0,
             tileY = 0,
-            content = "Hello World".toCharArray(),
+            content = content,
             writability = 0,
             color = IntArray(128) { android.graphics.Color.BLACK },
             bgColor = IntArray(128) { -1 },

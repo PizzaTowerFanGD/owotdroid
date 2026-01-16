@@ -14,13 +14,18 @@ class Converters {
     private val gson = Gson()
     
     @TypeConverter
-    fun fromCharArray(value: CharArray): String {
-        return String(value)
+    fun fromStringArray(value: Array<String>): String {
+        return gson.toJson(value)
     }
     
     @TypeConverter
-    fun toCharArray(value: String): CharArray {
-        return value.toCharArray()
+    fun toStringArray(value: String): Array<String> {
+        return try {
+            val type = object : TypeToken<Array<String>>() {}.type
+            gson.fromJson(value, type) ?: Array(128) { " " }
+        } catch (e: Exception) {
+            Array(128) { " " }
+        }
     }
     
     @TypeConverter
@@ -118,7 +123,7 @@ data class TileEntity(
     val tileKey: String, // "tileX,tileY"
     val tileX: Int,
     val tileY: Int,
-    val content: CharArray,
+    val content: Array<String>, // Changed from CharArray to support text decorations
     val writability: Int,
     val color: IntArray,
     val bgColor: IntArray,

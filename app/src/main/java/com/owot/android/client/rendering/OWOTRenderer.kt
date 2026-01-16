@@ -332,7 +332,7 @@ class OWOTRenderer(
                     )
                     
                     // Handle text decorations
-                    handleTextDecorations(tile, charIndex, charX, charY, tileCanvas)
+                    handleTextDecorations(tile, charIndex, screenX, screenY, tileCanvas)
                 }
                 
                 // Draw background color for this cell

@@ -317,7 +317,12 @@ class OWOTRenderer(
                 val bgColor = tile.properties.bgColor[charIndex]
                 if (bgColor != -1) {
                     val bgPaint = Paint().apply {
-                        color = bgColor
+                        // Add full opacity alpha channel if color is RGB only
+                        color = if ((bgColor and 0xFF000000.toInt()) == 0) {
+                            bgColor or 0xFF000000.toInt()  // Add opaque alpha
+                        } else {
+                            bgColor
+                        }
                         style = Paint.Style.FILL
                     }
                     tileCanvas.drawRect(
@@ -336,10 +341,15 @@ class OWOTRenderer(
                     val screenX = charX * this.cellWidth
                     val screenY = charY * this.cellHeight + textPaint.fontMetrics.ascent
                     
-                    // Set character color
+                    // Set character color (add alpha channel if not present for Android rendering)
                     val color = tile.properties.color[charIndex]
-                    if (color != Color.BLACK) {
-                        textPaint.color = color
+                    if (color != Color.BLACK && color != 0) {
+                        // Add full opacity alpha channel if color is RGB only
+                        textPaint.color = if ((color and 0xFF000000.toInt()) == 0) {
+                            color or 0xFF000000.toInt()  // Add opaque alpha
+                        } else {
+                            color
+                        }
                     } else {
                         textPaint.color = textColor
                     }

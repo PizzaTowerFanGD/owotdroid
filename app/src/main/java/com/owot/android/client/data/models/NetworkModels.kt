@@ -71,9 +71,9 @@ object EditBuilder {
     ): List<Any> {
         val edit = mutableListOf<Any>(tileY, tileX, charY, charX, timestamp, character, editId)
         
-        // Add text color if provided
+        // Add text color if provided (strip alpha channel for OWOT compatibility)
         if (textColor != null) {
-            edit.add(textColor)
+            edit.add(textColor and 0x00FFFFFF)
         }
         
         // Add background color if provided (text color must be included first)
@@ -81,7 +81,7 @@ object EditBuilder {
             if (textColor == null) {
                 edit.add(0) // Placeholder for text color
             }
-            edit.add(bgColor)
+            edit.add(bgColor and 0x00FFFFFF)  // Strip alpha channel
         }
         
         return edit
@@ -513,34 +513,46 @@ object TileParser {
     
     /**
      * Parse a single color value (can be hex string, decimal, or number)
+     * Returns RGB color as integer (without alpha channel for OWOT compatibility)
      */
     private fun parseColorValue(value: Any?): Int {
         return when (value) {
-            is Number -> value.toInt()
+            is Number -> {
+                // Strip alpha channel if present
+                value.toInt() and 0x00FFFFFF
+            }
             is String -> {
                 val trimmed = value.trim()
                 when {
                     trimmed.startsWith("#") -> {
                         // Hex color like "#FF0000"
-                        android.graphics.Color.parseColor(trimmed)
+                        // Parse and strip alpha channel
+                        try {
+                            val color = android.graphics.Color.parseColor(trimmed)
+                            color and 0x00FFFFFF  // Remove alpha channel
+                        } catch (e: Exception) {
+                            0
+                        }
                     }
                     trimmed.startsWith("0x") -> {
                         // Hex color like "0xFF0000"
-                        trimmed.substring(2).toIntOrNull(16) ?: 0
+                        val hex = trimmed.substring(2).toIntOrNull(16) ?: 0
+                        hex and 0x00FFFFFF  // Remove alpha channel
                     }
                     trimmed.contains(",") -> {
                         // RGB format like "255,0,0"
                         val parts = trimmed.split(",")
                         if (parts.size >= 3) {
-                            val r = parts[0].toIntOrNull() ?: 0
-                            val g = parts[1].toIntOrNull() ?: 0
-                            val b = parts[2].toIntOrNull() ?: 0
-                            android.graphics.Color.rgb(r, g, b)
+                            val r = (parts[0].toIntOrNull() ?: 0) and 0xFF
+                            val g = (parts[1].toIntOrNull() ?: 0) and 0xFF
+                            val b = (parts[2].toIntOrNull() ?: 0) and 0xFF
+                            (r shl 16) or (g shl 8) or b  // Create RGB without alpha
                         } else 0
                     }
                     else -> {
                         // Try parsing as decimal
-                        trimmed.toIntOrNull() ?: 0
+                        val decimal = trimmed.toIntOrNull() ?: 0
+                        decimal and 0x00FFFFFF  // Remove alpha channel
                     }
                 }
             }

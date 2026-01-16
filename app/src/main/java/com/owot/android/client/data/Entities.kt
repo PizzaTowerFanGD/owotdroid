@@ -201,6 +201,7 @@ data class TileEntity(
 
 /**
  * Chat message entity for Room database
+ * Note: Chat colors are stored as hex strings (e.g., "#FF0000")
  */
 @Entity(tableName = "chat_messages")
 data class ChatMessageEntity(
@@ -209,7 +210,7 @@ data class ChatMessageEntity(
     val nickname: String,
     val message: String,
     val location: ChatLocation,
-    val color: Int? = null,
+    val color: String? = null,  // Hex string like "#FF0000"
     val isOp: Boolean = false,
     val isAdmin: Boolean = false,
     val isStaff: Boolean = false,

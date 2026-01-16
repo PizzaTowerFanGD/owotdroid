@@ -114,6 +114,7 @@ data class EditData(
 
 /**
  * Chat message
+ * Note: Chat colors are strings (e.g., "#FF0000"), while tile colors are integers
  */
 data class ChatMessage(
     @SerializedName("nickname")
@@ -123,7 +124,7 @@ data class ChatMessage(
     @SerializedName("location")
     val location: ChatLocation,
     @SerializedName("color")
-    val color: Int? = null,
+    val color: String? = null,  // Chat colors are hex strings like "#FF0000"
     @SerializedName("customMeta")
     val customMeta: Map<String, Any>? = null
 ) : WSMessage() {
@@ -615,6 +616,7 @@ data class WriteResponse(
 
 /**
  * Chat response from server
+ * Note: Chat colors are strings (e.g., "#FF0000"), while tile colors are integers
  */
 data class ChatResponse(
     override val kind: String = "chat",
@@ -637,7 +639,7 @@ data class ChatResponse(
     @SerializedName("staff")
     val isStaff: Boolean = false,
     @SerializedName("color")
-    val color: Int? = null,
+    val color: String? = null,  // Chat colors are hex strings like "#FF0000"
     @SerializedName("date")
     val date: String,
     @SerializedName("dataObj")

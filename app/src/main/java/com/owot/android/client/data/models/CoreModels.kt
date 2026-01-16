@@ -10,7 +10,7 @@ import java.util.*
 data class Tile(
     val tileX: Int,
     val tileY: Int,
-    var content: CharArray = CharArray(128), // 16x8 tile = 128 characters
+    var content: Array<String> = Array(128) { " " }, // 16x8 tile = 128 character strings (with decorations)
     var properties: TileProperties = TileProperties(),
     var lastModified: Long = System.currentTimeMillis()
 ) {
@@ -20,16 +20,30 @@ data class Tile(
         const val TILE_SIZE = TILE_WIDTH * TILE_HEIGHT
     }
     
-    fun setCharacter(x: Int, y: Int, char: Char) {
+    /**
+     * Set a character at position (may include decoration codes)
+     */
+    fun setCharacter(x: Int, y: Int, charStr: String) {
         if (x in 0 until TILE_WIDTH && y in 0 until TILE_HEIGHT) {
-            content[y * TILE_WIDTH + x] = char
+            content[y * TILE_WIDTH + x] = charStr
         }
     }
     
-    fun getCharacter(x: Int, y: Int): Char {
+    /**
+     * Get a character at position
+     */
+    fun getCharacter(x: Int, y: Int): String {
         return if (x in 0 until TILE_WIDTH && y in 0 until TILE_HEIGHT) {
             content[y * TILE_WIDTH + x]
-        } else ' '
+        } else " "
+    }
+    
+    /**
+     * Get decoded character at position
+     */
+    fun getDecodedCharacter(x: Int, y: Int): DecodedCharacter {
+        val charStr = getCharacter(x, y)
+        return TextDecorations.decode(charStr)
     }
     
     override fun equals(other: Any?): Boolean {
@@ -124,12 +138,83 @@ enum class LinkType {
 /**
  * Character decorations (bold, italic, underline, etc.)
  */
-enum class CharacterDecoration(val unicode: Int) {
-    BOLD(0x20F0),
-    ITALIC(0x20F1),
-    UNDERLINE(0x20F2),
-    STRIKETHROUGH(0x20F3)
+enum class CharacterDecoration(val bit: Int) {
+    BOLD(8),        // 0b1000
+    ITALIC(4),      // 0b0100
+    UNDERLINE(2),   // 0b0010
+    STRIKETHROUGH(1) // 0b0001
 }
+
+/**
+ * Text decoration utilities for encoding/decoding OWOT decorations
+ */
+object TextDecorations {
+    const val TEXT_DECORATION_OFFSET = 0x20F0
+    
+    /**
+     * Encode text decorations into OWOT format
+     * Returns: character + decoration Unicode characters
+     */
+    fun encode(
+        char: Char,
+        bold: Boolean = false,
+        italic: Boolean = false,
+        underline: Boolean = false,
+        strikethrough: Boolean = false
+    ): String {
+        val bitmap = (if (bold) CharacterDecoration.BOLD.bit else 0) or
+                     (if (italic) CharacterDecoration.ITALIC.bit else 0) or
+                     (if (underline) CharacterDecoration.UNDERLINE.bit else 0) or
+                     (if (strikethrough) CharacterDecoration.STRIKETHROUGH.bit else 0)
+        
+        return if (bitmap == 0) {
+            char.toString()
+        } else {
+            char.toString() + (TEXT_DECORATION_OFFSET + bitmap).toChar()
+        }
+    }
+    
+    /**
+     * Decode text decorations from OWOT format
+     * Returns: DecodedCharacter with character and decoration flags
+     */
+    fun decode(charStr: String): DecodedCharacter {
+        if (charStr.isEmpty()) {
+            return DecodedCharacter(' ', false, false, false, false)
+        }
+        
+        val char = charStr[0]
+        var bold = false
+        var italic = false
+        var underline = false
+        var strikethrough = false
+        
+        // Parse decoration characters
+        for (i in 1 until charStr.length) {
+            val code = charStr[i].code
+            if (code >= TEXT_DECORATION_OFFSET && code <= TEXT_DECORATION_OFFSET + 15) {
+                val bitmap = code - TEXT_DECORATION_OFFSET
+                bold = bold || (bitmap and CharacterDecoration.BOLD.bit != 0)
+                italic = italic || (bitmap and CharacterDecoration.ITALIC.bit != 0)
+                underline = underline || (bitmap and CharacterDecoration.UNDERLINE.bit != 0)
+                strikethrough = strikethrough || (bitmap and CharacterDecoration.STRIKETHROUGH.bit != 0)
+            }
+        }
+        
+        return DecodedCharacter(char, bold, italic, underline, strikethrough)
+    }
+}
+
+/**
+ * Decoded character with decoration information
+ */
+data class DecodedCharacter(
+    val char: Char,
+    val bold: Boolean,
+    val italic: Boolean,
+    val underline: Boolean,
+    val strikethrough: Boolean
+)
 
 /**
  * World model containing global world information

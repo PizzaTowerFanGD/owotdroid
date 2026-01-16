@@ -309,33 +309,9 @@ class OWOTRenderer(
         for (charY in 0 until Tile.TILE_HEIGHT) {
             for (charX in 0 until Tile.TILE_WIDTH) {
                 val charIndex = charY * Tile.TILE_WIDTH + charX
-                val character = tile.content[charIndex]
+                val charStr = tile.content[charIndex]
                 
-                if (character != ' ') {
-                    val screenX = charX * this.cellWidth
-                    val screenY = charY * this.cellHeight + textPaint.fontMetrics.ascent
-                    
-                    // Set character color
-                    val color = tile.properties.color[charIndex]
-                    if (color != Color.BLACK) {
-                        textPaint.color = color
-                    } else {
-                        textPaint.color = textColor
-                    }
-                    
-                    // Draw character
-                    tileCanvas.drawText(
-                        character.toString(),
-                        screenX,
-                        screenY,
-                        textPaint
-                    )
-                    
-                    // Handle text decorations
-                    handleTextDecorations(tile, charIndex, screenX, screenY, tileCanvas)
-                }
-                
-                // Draw background color for this cell
+                // Draw background color for this cell first (behind text)
                 val bgColor = tile.properties.bgColor[charIndex]
                 if (bgColor != -1) {
                     val bgPaint = Paint().apply {
@@ -350,6 +326,73 @@ class OWOTRenderer(
                         bgPaint
                     )
                 }
+                
+                // Decode character and decorations
+                val decodedChar = TextDecorations.decode(charStr)
+                
+                if (decodedChar.char != ' ') {
+                    val screenX = charX * this.cellWidth
+                    val screenY = charY * this.cellHeight + textPaint.fontMetrics.ascent
+                    
+                    // Set character color
+                    val color = tile.properties.color[charIndex]
+                    if (color != Color.BLACK) {
+                        textPaint.color = color
+                    } else {
+                        textPaint.color = textColor
+                    }
+                    
+                    // Apply text decorations
+                    val originalTypeface = textPaint.typeface
+                    if (decodedChar.bold || decodedChar.italic) {
+                        val style = when {
+                            decodedChar.bold && decodedChar.italic -> Typeface.BOLD_ITALIC
+                            decodedChar.bold -> Typeface.BOLD
+                            decodedChar.italic -> Typeface.ITALIC
+                            else -> Typeface.NORMAL
+                        }
+                        textPaint.typeface = Typeface.create(fontFamily, style)
+                    }
+                    
+                    // Draw character
+                    tileCanvas.drawText(
+                        decodedChar.char.toString(),
+                        screenX,
+                        screenY,
+                        textPaint
+                    )
+                    
+                    // Restore typeface
+                    textPaint.typeface = originalTypeface
+                    
+                    // Draw underline
+                    if (decodedChar.underline) {
+                        val underlineY = charY * cellHeight + cellHeight - 2f
+                        decorationPaint.color = textPaint.color
+                        decorationPaint.strokeWidth = 1f
+                        tileCanvas.drawLine(
+                            screenX,
+                            underlineY,
+                            screenX + cellWidth,
+                            underlineY,
+                            decorationPaint
+                        )
+                    }
+                    
+                    // Draw strikethrough
+                    if (decodedChar.strikethrough) {
+                        val strikeY = charY * cellHeight + cellHeight / 2f
+                        decorationPaint.color = textPaint.color
+                        decorationPaint.strokeWidth = 1f
+                        tileCanvas.drawLine(
+                            screenX,
+                            strikeY,
+                            screenX + cellWidth,
+                            strikeY,
+                            decorationPaint
+                        )
+                    }
+                }
             }
         }
         
@@ -358,8 +401,9 @@ class OWOTRenderer(
     }
     
     /**
-     * Handle text decorations (bold, italic, underline, strikethrough)
+     * Legacy method - text decorations are now handled inline in renderTileContent
      */
+    @Deprecated("Text decorations are now handled inline")
     private fun handleTextDecorations(
         tile: Tile,
         charIndex: Int,
@@ -367,26 +411,7 @@ class OWOTRenderer(
         y: Float,
         tileCanvas: Canvas
     ) {
-        // This would parse Unicode combining characters for decorations
-        // For now, we'll implement basic underline support
-        
-        val character = tile.content[charIndex]
-        if (character.code >= 0x20F0 && character.code <= 0x20FF) {
-            when (character.code) {
-                CharacterDecoration.UNDERLINE.unicode -> {
-                    decorationPaint.color = textPaint.color
-                    decorationPaint.strokeWidth = 2f
-                    tileCanvas.drawLine(
-                        x,
-                        y + textPaint.textSize * 0.1f,
-                        x + textPaint.measureText(character.toString()),
-                        y + textPaint.textSize * 0.1f,
-                        decorationPaint
-                    )
-                }
-                // Add other decorations as needed
-            }
-        }
+        // No longer used - decorations are decoded and rendered inline
     }
     
     /**

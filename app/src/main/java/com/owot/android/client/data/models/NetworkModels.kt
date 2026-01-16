@@ -567,10 +567,10 @@ object TileParser {
     fun parseCellProps(cellPropsData: Map<String, Map<String, Any>>?): MutableMap<Int, CellProperties> {
         val cellProps = mutableMapOf<Int, CellProperties>()
         
-        cellPropsData?.forEach { (yStr, xMap) ->
-            val y = yStr.toIntOrNull() ?: return@forEach
-            xMap.forEach { (xStr, cellData) ->
-                val x = xStr.toIntOrNull() ?: return@forEach
+        cellPropsData?.forEach yLoop@ { (yStr, xMap) ->
+            val y = yStr.toIntOrNull() ?: return@yLoop
+            xMap.forEach xLoop@ { (xStr, cellData) ->
+                val x = xStr.toIntOrNull() ?: return@xLoop
                 val index = y * 16 + x
                 
                 // Parse cell data

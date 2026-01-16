@@ -193,6 +193,19 @@ class OWOTRenderer(
         
         canvas.drawColor(backgroundColor)
         
+        // Debug: Draw a test pattern if no tiles
+        if (tiles.isEmpty()) {
+            val debugPaint = Paint().apply {
+                color = Color.RED
+                textSize = 40f
+                isAntiAlias = true
+            }
+            canvas.drawText("No tiles loaded", 50f, 100f, debugPaint)
+            canvas.drawText("Tiles: ${tiles.size}", 50f, 150f, debugPaint)
+            canvas.drawText("Zoom: $zoom", 50f, 200f, debugPaint)
+            canvas.drawText("Pos: $positionX, $positionY", 50f, 250f, debugPaint)
+        }
+        
         val tileRange = getVisibleTileRange(width, height)
         
         // Add visible tiles to render queue

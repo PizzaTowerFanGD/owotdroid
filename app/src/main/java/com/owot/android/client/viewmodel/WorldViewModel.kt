@@ -380,9 +380,7 @@ class WorldViewModel(
                 val preferences = userPreferences.value ?: return@launch
                 
                 // Convert Android color (ARGB) to hex string for chat (without alpha)
-                val colorHex = preferences.textColor?.let { color ->
-                    String.format("#%06X", color and 0x00FFFFFF)
-                }
+                val colorHex = String.format("#%06X", preferences.textColor and 0x00FFFFFF)
                 
                 val chatMessage = ChatMessage(
                     nickname = preferences.nickname,

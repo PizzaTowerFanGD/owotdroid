@@ -20,14 +20,6 @@ name = "android.permission.INTERNET"
 [lib]
 crate-type = ["cdylib", "rlib"]
 
-[features]
-default = []
-desktop = []
-
-[[example]]
-name = "desktop"
-required-features = ["desktop"]
-
 [dependencies]
 eframe = { version = "0.27", default-features = false, features = ["glow", "default_fonts", "android-game-activity"] }
 log = "0.4"

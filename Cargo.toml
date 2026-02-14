@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-eframe = { version = "0.27", default-features = false, features = ["glow", "default_fonts", "android-activity"] }
+eframe = { version = "0.27", default-features = false, features = ["glow", "default_fonts", "android-game-activity"] }
 log = "0.4"
 env_logger = "0.11"
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }

@@ -226,3 +226,6 @@ local.properties
 
 # API keys (keep empty)
 secrets.properties
+# Rust
+/target/
+Cargo.lock

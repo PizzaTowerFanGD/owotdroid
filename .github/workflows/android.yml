@@ -22,6 +22,12 @@ jobs:
       - name: setup android sdk
         uses: android-actions/setup-android@v3
 
+      - name: set up java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
       - name: install ndk
         run: sdkmanager "ndk;25.2.9519653"
 
@@ -31,14 +37,28 @@ jobs:
       - name: install cargo-ndk
         run: cargo install cargo-ndk
 
+      - name: install cargo-apk
+        run: cargo install cargo-apk
+
       - name: build android library
         run: cargo ndk -t arm64-v8a build --release
 
+      - name: build android apk
+        run: cargo apk build --release --target aarch64-linux-android
+
       - name: list output
-        run: find target -name "*.so" -type f
+        run: |
+          find target -name "*.so" -type f
+          find target -name "*.apk" -type f
 
       - name: upload android artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-libraries
           path: target/aarch64-linux-android/release/*.so
+
+      - name: upload android apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: target/android/**/*.apk

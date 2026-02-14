@@ -2,7 +2,7 @@ name: android ci
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'cto/**' ]
   pull_request:
     branches: [ main, develop ]
 
@@ -30,6 +30,9 @@ jobs:
 
       - name: install ndk
         run: sdkmanager "ndk;25.2.9519653"
+
+      - name: install android platform 30
+        run: sdkmanager "platforms;android-30"
 
       - name: set ndk environment
         run: echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV

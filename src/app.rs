@@ -45,7 +45,7 @@ impl OwotApp {
 
     fn handle_drag(&mut self, ctx: &egui::Context) {
         let delta = ctx.input(|i| i.pointer.delta());
-        if ctx.input(|i| i.pointer.is_down()) {
+        if ctx.input(|i| i.pointer.button_down(egui::PointerButton::Primary)) {
             self.pos_x -= delta.x as f64 / self.cell_size.x as f64;
             self.pos_y -= delta.y as f64 / self.cell_size.y as f64;
         }

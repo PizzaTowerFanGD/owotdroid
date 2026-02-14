@@ -15,7 +15,7 @@ This repository contains a Rust client for **Our World of Text (OWOT)** built wi
 
 ## Running on Desktop
 ```bash
-cargo run --features desktop
+cargo run --example desktop
 ```
 
 ## Android Build (cargo-apk)

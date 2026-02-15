@@ -2,11 +2,18 @@
 name = "owot-rust-client"
 version = "0.1.0"
 edition = "2021"
+autobins = false
 
 [package.metadata.android]
 package = "com.owot.rustclient"
 label = "OWOT Rust Client"
 min_sdk_version = 23
+
+[package.metadata.android.signing.release]
+path = "keystore/release.keystore"
+keystore_password = "owotrelease"
+key_alias = "owot-release"
+key_password = "owotrelease"
 
 [[package.metadata.android.permission]]
 name = "android.permission.INTERNET"

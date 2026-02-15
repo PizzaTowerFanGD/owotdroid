@@ -5,6 +5,5 @@ fn main() -> eframe::Result<()> {
 
 #[cfg(target_os = "android")]
 fn main() {
-    // Android uses android_main() from lib.rs instead
     panic!("Android builds should use android_main(), not main()")
 }
